@@ -1,50 +1,76 @@
-version: '3'
+version: '3.9'
 services:
   postgres_db:
     image: postgres:13-alpine
+    ports:
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
+      - POSTGRES_HOST=postgres_db
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=thenewshit
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=weather_db
   mysql_db:
     image: mysql:8
+    cap_add:
+      - SYS_NICE
+    restart: always
     ports:
       - 3306:3306
     volumes:
       - mysql_data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=thenewshit
-      - MYSQL_PASSWORD=thenewshit
-      - MYSQL_USER=root
+      - MYSQL_HOST=mysql_db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=metadata
+      - MYSQL_ROOT_PASSWORD=thenewone
+      - MYSQL_PASSWORD=thenewone
       - MYSQL_DATABASE=temperature_db
   load-aggregate-app:
-    restart: "no"
+    restart: always
     build: 
       context: ./load-aggregate-app
       dockerfile: Dockerfile
+    ports:
+      - 9000:5000  
     volumes:
-      - ./server:/app:rw
-      - /app/node_modules
+      - ./load-aggregate-app:/app:rw
     environment:
-      - CHOKIDAR_USEPOLLING=true
-      - MONGO_URI=mongodb://mongodb:27017/hsse-project
+      - API_KEY=
+      - POSTGRES_HOST=postgres_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=weather_db
+      - POSTGRES_PORT=5432
+      - MYSQL_HOST=mysql_db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=metadata
+      - MYSQL_ROOT_PASSWORD=thenewone
+      - MYSQL_PASSWORD=thenewone
+      - MYSQL_DATABASE=temperature_db
     depends_on:
       - postgres_db
       - mysql_db
   reporting-app:
+    restart: always
     build:
       context: ./reporting-app
       dockerfile: Dockerfile
+    ports:
+      - 9001:5000  
     volumes:
-      - ./reactjs:/app:rw
-      - /app/node_modules
+      - ./reporting-app:/app:rw
     environment:
-      - CHOKIDAR_USEPOLLING=true
-      - BACKEND_SERVER=http://localhost:3050/api
+      - MYSQL_HOST=mysql_db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=metadata
+      - MYSQL_ROOT_PASSWORD=thenewone
+      - MYSQL_PASSWORD=thenewone
+      - MYSQL_DATABASE=temperature_db
     depends_on:
-      mysql_db
+      - mysql_db
 volumes:
   postgres_data:
   mysql_data:
+  mysql_config:

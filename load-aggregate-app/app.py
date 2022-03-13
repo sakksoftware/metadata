@@ -12,21 +12,21 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
 mysql_db_driver_class = "com.mysql.cj.jdbc.Driver"
-mysql_hostname = "localhost"
-mysql_port = str(3306)
-user_name = "root"
-password = "root"
-mysql_database_name = "temperature_db"
+mysql_hostname = os.environ['MYSQL_HOST']
+mysql_port = os.environ['MYSQL_PORT']
+mysql_username = os.environ['MYSQL_USER']
+mysql_password = os.environ['MYSQL_PASSWORD']
+mysql_database_name = os.environ['MYSQL_DATABASE']
 mysql_url = "jdbc:mysql://" + mysql_hostname + ":" + mysql_port + "/" + mysql_database_name
 
 postgres_db_driver_class = "org.postgresql.Driver"
-postgres_hostname = "localhost"
-postgres_port = str(5432)
-user_name = "postgres"
-password = "thenewshit"
-postgres_database_name = "weather_db"
+postgres_hostname = os.environ['POSTGRES_HOST']
+postgres_port = os.environ['POSTGRES_PORT']
+postgres_username = os.environ['POSTGRES_USER']
+postgres_password = os.environ['POSTGRES_PASSWORD']
+postgres_database_name = os.environ['POSTGRES_DB']
 posgresql_url = "jdbc:postgresql://" + postgres_hostname + ":" + postgres_port + "/" + postgres_database_name
-
+#"jdbc:postgresql://postgres_db:5432/weather_db"
 
 loading_error = False
 cities = ["Toronto", "Paris", "Miami", "Edmonton", "Dallas", "Vancouver", "Accra", "Madrid", "Los Angeles", "London"]
@@ -35,7 +35,7 @@ days_all_weather_list = []
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:thenewshit@localhost:5432/weather_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://' + postgres_username + ':' + postgres_password + '@' + postgres_hostname + ':' + postgres_port + '/' + postgres_database_name
 db = SQLAlchemy(app)
 
 
@@ -54,12 +54,12 @@ def write_table(df, table_name, schema=""):
         .format("jdbc") \
         .mode("overwrite") \
         .option("driver", mysql_db_driver_class) \
-        .option("url", "jdbc:mysql://localhost:3306/temperature_db") \
+        .option("url", mysql_url) \
         .option("dbtable", table_name) \
-        .option("user", "root") \
-        .option("password", "thenewshit") \
+        .option("user", mysql_username) \
+        .option("password", mysql_password) \
         .save()
-        
+#.option("url", "jdbc:mysql://mysql_db:3306/temperature_db") \        
 
 def read_table(spark, table_name, schema="public"):
     if schema:
@@ -69,13 +69,13 @@ def read_table(spark, table_name, schema="public"):
 
     return spark.read \
         .format("jdbc") \
-        .option("url", "jdbc:postgresql://localhost:5432/weather_db") \
+        .option("url", posgresql_url) \
         .option("driver", postgres_db_driver_class) \
         .option("dbtable", query) \
-        .option("user", "postgres") \
-        .option("password", "thenewshit") \
+        .option("user", postgres_username) \
+        .option("password", postgres_password) \
         .load()
-
+#.option("url", "jdbc:postgresql://postgres_db:5432/weather_db") \ 
 
 
 class WeatherHistory (db.Model):
@@ -290,7 +290,7 @@ def weather_aggregate():
  
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3001, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
 
 
 # posted_at=datetime.datetime.utcnow()

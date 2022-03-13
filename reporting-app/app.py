@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 import json
 from flask import Flask, request, jsonify, make_response
@@ -8,7 +9,17 @@ from marshmallow import fields
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:thenewshit@localhost:3306/temperature_db'
+mysql_db_driver_class = "com.mysql.cj.jdbc.Driver"
+mysql_hostname = os.environ['MYSQL_HOST']
+mysql_port = os.environ['MYSQL_PORT']
+mysql_username = os.environ['MYSQL_USER']
+mysql_password = os.environ['MYSQL_PASSWORD']
+mysql_database_name = os.environ['MYSQL_DATABASE']
+mysql_url = "jdbc:mysql://" + mysql_hostname + ":" + mysql_port + "/" + mysql_database_name
+
+# "mysql+pymysql://user:pass@some_mariadb/dbname
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://' + mysql_username + ':' + mysql_password + '@' + mysql_hostname + ':' + mysql_port + '/' + mysql_database_name
+
 
 db = SQLAlchemy(app)
 
