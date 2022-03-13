@@ -1,0 +1,2 @@
+Flask @ file:///home/ktietz/src/ci/flask_1611932660458/work
+Flask-SQLAlchemy==2.5.1
